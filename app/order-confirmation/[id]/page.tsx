@@ -7,7 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import type { Order, OrderItem } from '@/lib/types';
+import type { Order, OrderItem, Product } from '@/lib/types';
+import { DownloadIcon, FileIcon } from 'lucide-react';
+
+interface OrderItemWithProduct extends OrderItem {
+  product?: Product | null;
+}
 
 export default function OrderConfirmationPage({
   params,
@@ -16,8 +21,9 @@ export default function OrderConfirmationPage({
 }) {
   const [id, setId] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderItems, setOrderItems] = useState<OrderItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const resolveParams = async () => {
@@ -44,11 +50,11 @@ export default function OrderConfirmationPage({
 
         const { data: itemsData } = await supabase
           .from('order_items')
-          .select('*')
+          .select('*, product:products(*)')
           .eq('order_id', orderId);
 
         if (itemsData) {
-          setOrderItems(itemsData);
+          setOrderItems(itemsData as OrderItemWithProduct[]);
         }
       }
 
@@ -57,6 +63,25 @@ export default function OrderConfirmationPage({
 
     resolveParams();
   }, [params]);
+
+  async function handleDownload(productId: string) {
+    setDownloadingId(productId);
+    try {
+      const response = await fetch(`/api/download/${productId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Download failed');
+        return;
+      }
+      const { url } = await response.json();
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Download failed');
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -146,8 +171,21 @@ export default function OrderConfirmationPage({
               {orderItems.map((item) => (
                 <div key={item.id} className="flex justify-between items-center border-b border-border pb-4 last:border-0">
                   <div>
-                    <p className="font-medium text-foreground">Product ID: {item.product_id.slice(0, 8)}</p>
+                    <p className="font-medium text-foreground">
+                      {item.product?.name || `Product ID: ${item.product_id.slice(0, 8)}`}
+                    </p>
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                    {item.product?.download_file_path && (
+                      <Button
+                        variant="link"
+                        className="text-primary p-0 h-auto text-xs mt-1"
+                        onClick={() => handleDownload(item.product_id)}
+                        disabled={downloadingId === item.product_id}
+                      >
+                        <DownloadIcon className="h-3 w-3 mr-1" />
+                        {downloadingId === item.product_id ? 'Preparing...' : 'Download'}
+                      </Button>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-primary">${item.price.toFixed(2)}</p>
@@ -169,20 +207,21 @@ export default function OrderConfirmationPage({
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 mb-8 text-amber-900">
             <h3 className="font-semibold mb-2">Demo Purchase</h3>
             <p className="text-sm">
-              This is a demonstration of a completed order. No real payment was processed. In a production environment, you would receive an email confirmation and be able to download your digital products immediately.
+              This is a demonstration of a completed order. No real payment was processed. Your digital products are available for download above and will also appear in your My Downloads page.
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/" className="flex-1">
+            <Link href="/account/downloads" className="flex-1">
               <Button className="w-full bg-primary hover:bg-red-600 text-white font-semibold py-6" size="lg">
-                Continue Shopping
+                <FileIcon className="h-4 w-4 mr-2" />
+                My Downloads
               </Button>
             </Link>
-            <Link href="/cart" className="flex-1">
+            <Link href="/" className="flex-1">
               <Button variant="outline" className="w-full border-slate-300 py-6" size="lg">
-                View Cart
+                Continue Shopping
               </Button>
             </Link>
           </div>

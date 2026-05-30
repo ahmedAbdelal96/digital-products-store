@@ -76,7 +76,9 @@
 - Pre-built seed data with 8+ digital products
 - Row Level Security (RLS) policies documented and ready to apply
 - Supabase Storage for product images (public bucket)
-- Ready for private storage + signed URLs for paid downloads
+- Private storage bucket for paid download files
+- Secure signed URL downloads for purchased products
+- My Downloads page for authenticated users
 - Ready for payment provider integration
 
 ---
@@ -93,6 +95,25 @@
 | `/admin/orders` | View all orders (demo checkout) |
 | `/admin/customers` | View registered users |
 | `/admin/settings` | Configure store content |
+
+---
+
+## Customer Routes
+
+| Route | Description |
+|-------|-------------|
+| `/account/downloads` | My Downloads - access purchased digital products |
+| `/order-confirmation/[id]` | Order confirmation with download links |
+
+### Secure Download System
+
+When a user purchases a product with a `download_file_path`:
+
+1. The file is stored in the private `product-files` bucket
+2. On purchase, a record is created in the `orders` and `order_items` tables
+3. The user can download from `/account/downloads` or the order confirmation page
+4. The API route `/api/download/[productId]` verifies ownership and generates a signed URL
+5. Signed URLs expire after 60 seconds for security
 
 ---
 
@@ -206,9 +227,32 @@ For product image upload to work, create a public bucket:
 2. Copy and paste `supabase/migrations/002_create_product_images_bucket.sql`
 3. Click "Run"
 
-**Important:** This bucket stores PUBLIC cover images only. Paid download files require a separate private bucket with signed URLs (see Future Production Phase below).
+### 6. Create Product Files Bucket (For Paid Downloads)
 
-### 6. Set Up RLS (Recommended for Production)
+For secure paid download files, create a private bucket:
+
+**Option A: Via Supabase Dashboard**
+1. Go to your project → Storage
+2. Click "New bucket"
+3. Name: `product-files`
+4. Select "Private bucket" (NOT public)
+5. Set file size limit: 100MB
+6. Allowed MIME types: `application/pdf`, `application/zip`, `application/x-rar-compressed`, `video/mp4`, `image/png`, `image/jpeg`, `application/vnd.adobe.photoshop`, `application/postscript`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+**Option B: Via SQL**
+1. Go to SQL Editor
+2. Copy and paste `supabase/migrations/004_create_product_files_bucket.sql`
+3. Click "Run"
+
+### 7. Run Download File Column Migration
+
+Add columns for private download file paths:
+
+1. Go to SQL Editor
+2. Copy and paste `supabase/migrations/003_add_download_file_path.sql`
+3. Click "Run"
+
+### 8. Set Up RLS (Recommended for Production)
 
 Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security policies.
 
@@ -290,9 +334,7 @@ Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security 
 ### 🔄 Future Production Phase
 
 - Stripe or Paddle payment integration
-- Private bucket + signed URLs for secure paid file downloads
 - Email order confirmations
-- User download history
 - Product search and filtering
 - Discount/promo code system
 - Order tracking

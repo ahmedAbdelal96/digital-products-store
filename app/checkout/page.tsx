@@ -58,6 +58,21 @@ export default function CheckoutPage() {
     try {
       const supabase = createClient();
 
+      const productIds = items.map(item => item.product_id);
+      const { data: validProducts, error: productsError } = await supabase
+        .from('products')
+        .select('id, status')
+        .in('id', productIds);
+
+      if (productsError) throw productsError;
+
+      const invalidProducts = validProducts?.filter(p => p.status !== 'active');
+      if (invalidProducts && invalidProducts.length > 0) {
+        alert('One or more products in your cart are no longer available. Please remove them and try again.');
+        setSubmitting(false);
+        return;
+      }
+
       // Create order
       const { data: order, error: orderError } = await supabase
         .from('orders')

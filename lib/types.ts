@@ -23,6 +23,9 @@ export interface Product {
   status: 'active' | 'inactive' | 'archived';
   is_featured: boolean;
   is_instant_download: boolean;
+  is_paid_product: boolean;
+  download_file_path: string | null;
+  file_size_bytes: number | null;
   views: number;
   downloads: number;
   display_order: number;

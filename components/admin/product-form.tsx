@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { ProductImageUpload } from './product-image-upload';
+import { ProductFileUpload } from './product-file-upload';
 import type { Product, Category } from '@/lib/types';
 
 interface ProductFormProps {
@@ -27,17 +28,20 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     image_url: product?.image_url || '',
     file_url: product?.file_url || '',
     file_size: product?.file_size || 0,
+    file_size_bytes: product?.file_size_bytes || 0,
     file_type: product?.file_type || '',
     status: product?.status || 'active',
     is_featured: product?.is_featured || false,
     is_instant_download: product?.is_instant_download ?? true,
+    is_paid_product: product?.is_paid_product ?? true,
+    download_file_path: product?.download_file_path || '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : (name === 'price' || name === 'file_size' ? parseFloat(value) : value),
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : (name === 'price' || name === 'file_size' || name === 'file_size_bytes' ? parseFloat(value) : value),
     }));
   };
 
@@ -183,28 +187,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium">File URL</label>
-              <Input
-                name="file_url"
-                value={formData.file_url}
-                onChange={handleChange}
-                placeholder="https://example.com/file.zip"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">File Size (bytes)</label>
-              <Input
-                type="number"
-                name="file_size"
-                value={formData.file_size}
-                onChange={handleChange}
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">File Type</label>
+              <label className="text-sm font-medium">File Type (for display)</label>
               <Input
                 name="file_type"
                 value={formData.file_type}
@@ -212,6 +195,30 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                 placeholder="ZIP, PDF, etc."
               />
             </div>
+
+            <ProductFileUpload
+              value={formData.download_file_path}
+              onChange={(path) => setFormData((prev) => ({ ...prev, download_file_path: path }))}
+              onFileSizeChange={(size) => setFormData((prev) => ({ ...prev, file_size_bytes: size }))}
+              productId={product?.id}
+            />
+
+            {formData.download_file_path && (
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    name="is_paid_product"
+                    checked={formData.is_paid_product}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, is_paid_product: e.target.checked }))
+                    }
+                    className="rounded border-input"
+                  />
+                  Requires Purchase to Download
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Status */}
