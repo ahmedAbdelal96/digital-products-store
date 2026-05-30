@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
+import { ProductImageUpload } from './product-image-upload';
 import type { Product, Category } from '@/lib/types';
 
 interface ProductFormProps {
@@ -165,14 +166,20 @@ export function ProductForm({ product, categories }: ProductFormProps) {
               />
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Image URL</label>
-              <Input
-                name="image_url"
+            <div className="space-y-3">
+              <ProductImageUpload
                 value={formData.image_url}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
+                onChange={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
               />
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Or enter URL manually</label>
+                <Input
+                  name="image_url"
+                  value={formData.image_url}
+                  onChange={handleChange}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
             </div>
 
             <div>

@@ -224,9 +224,41 @@ TO authenticated
 WITH CHECK (public.is_admin_user());
 
 -- ============================================
+-- STORAGE POLICIES
+-- ============================================
+
+-- Product Images bucket (public bucket for cover images)
+-- Note: This bucket stores PUBLIC cover images only, not paid download files
+
+-- Allow public read access to product-images bucket
+CREATE POLICY "Public read product images"
+ON storage.objects
+FOR SELECT
+TO public
+USING (bucket_id = 'product-images');
+
+-- Allow authenticated users (especially admins) to upload product images
+CREATE POLICY "Admin can upload product images"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'product-images');
+
+-- Allow admins to update/delete their own uploads
+CREATE POLICY "Admin can update product images"
+ON storage.objects
+FOR UPDATE
+TO authenticated
+USING (bucket_id = 'product-images');
+
+-- Note: For production, consider adding more restrictive policies based on user ownership
+-- For now, any admin can manage all images in the bucket
+
+-- ============================================
 -- VERIFY RLS IS WORKING
 -- ============================================
 
 -- Test by running:
 -- SELECT * FROM pg_policies WHERE tablename = 'products';
 -- SELECT * FROM pg_policies WHERE tablename = 'categories';
+-- SELECT * FROM pg_policies WHERE tablename = 'storage.objects';

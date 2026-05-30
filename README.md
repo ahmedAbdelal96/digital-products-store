@@ -64,7 +64,7 @@
 
 ### Admin Dashboard
 - **Dashboard Overview**: Stats for products, categories, orders, customers, views, downloads
-- **Products Management**: Full CRUD with filters, status control, featured toggle
+- **Products Management**: Full CRUD with filters, status control, featured toggle, image upload
 - **Categories Management**: Create, edit, delete with product counts
 - **Orders View**: Read-only order list with status badges (demo checkout ready)
 - **Customers View**: User list with admin badges
@@ -75,7 +75,8 @@
 - User authentication (signup, login, session management)
 - Pre-built seed data with 8+ digital products
 - Row Level Security (RLS) policies documented and ready to apply
-- Ready for Supabase Storage integration
+- Supabase Storage for product images (public bucket)
+- Ready for private storage + signed URLs for paid downloads
 - Ready for payment provider integration
 
 ---
@@ -188,7 +189,26 @@ WHERE email = 'your-email@example.com';
 
 3. Refresh your app — you now see the "Admin" link in the sidebar
 
-### 5. Set Up RLS (Recommended for Production)
+### 5. Create Product Images Bucket (Required for Image Upload)
+
+For product image upload to work, create a public bucket:
+
+**Option A: Via Supabase Dashboard**
+1. Go to your project → Storage
+2. Click "New bucket"
+3. Name: `product-images`
+4. Select "Public bucket"
+5. Set file size limit: 5MB
+6. Allowed MIME types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`
+
+**Option B: Via SQL**
+1. Go to SQL Editor
+2. Copy and paste `supabase/migrations/002_create_product_images_bucket.sql`
+3. Click "Run"
+
+**Important:** This bucket stores PUBLIC cover images only. Paid download files require a separate private bucket with signed URLs (see Future Production Phase below).
+
+### 6. Set Up RLS (Recommended for Production)
 
 Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security policies.
 
@@ -243,7 +263,8 @@ Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security 
 │   ├── seed.sql                # Seed data only
 │   ├── rls.sql                # Row Level Security policies
 │   └── migrations/             # Database migrations
-│       └── 001_add_store_settings.sql
+│       ├── 001_add_store_settings.sql
+│       └── 002_create_product_images_bucket.sql
 └── public/                     # Static assets
 ```
 
@@ -264,18 +285,18 @@ Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security 
 - Product status control (publish/draft/archive)
 - Featured product toggle
 - Store settings management
+- Product image upload to Supabase Storage (public bucket)
 
 ### 🔄 Future Production Phase
 
 - Stripe or Paddle payment integration
-- Secure file downloads via Supabase Storage with signed URLs
+- Private bucket + signed URLs for secure paid file downloads
 - Email order confirmations
 - User download history
 - Product search and filtering
 - Discount/promo code system
 - Order tracking
 - Email notifications
-- Product image upload to Supabase Storage
 
 ---
 
