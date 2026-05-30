@@ -10,7 +10,7 @@
 
 **A dynamic digital products e-commerce MVP with admin dashboard and Supabase backend.**
 
-[Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Supabase Setup](#supabase-setup) • [Project Structure](#project-structure)
+[Features](#features) • [Admin Dashboard](#admin-dashboard) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Supabase Setup](#supabase-setup) • [Project Structure](#project-structure)
 
 </div>
 
@@ -63,22 +63,35 @@
 - Fully responsive design (mobile, tablet, desktop)
 
 ### Admin Dashboard
-- Protected admin routes (login required)
-- Role-based access control (`is_admin` flag)
-- Full product CRUD operations
-- Category management (create, edit, delete)
-- Product status control (active, inactive, archived)
-- Featured product toggle
-- Instant download toggle
-- View statistics (views, downloads)
+- **Dashboard Overview**: Stats for products, categories, orders, customers, views, downloads
+- **Products Management**: Full CRUD with filters, status control, featured toggle
+- **Categories Management**: Create, edit, delete with product counts
+- **Orders View**: Read-only order list with status badges (demo checkout ready)
+- **Customers View**: User list with admin badges
+- **Store Settings**: Configure hero, promo, CTA sections
 
 ### Supabase Backend
 - PostgreSQL database with full schema
 - User authentication (signup, login, session management)
 - Pre-built seed data with 8+ digital products
-- Row Level Security (RLS) policies documented
+- Row Level Security (RLS) policies documented and ready to apply
 - Ready for Supabase Storage integration
 - Ready for payment provider integration
+
+---
+
+## Admin Dashboard Routes
+
+| Route | Description |
+|-------|-------------|
+| `/admin` | Dashboard overview with stats and quick actions |
+| `/admin/products` | Products list with search, filter, status actions |
+| `/admin/products/new` | Create new product |
+| `/admin/products/[id]` | Edit existing product |
+| `/admin/categories` | Category management with product counts |
+| `/admin/orders` | View all orders (demo checkout) |
+| `/admin/customers` | View registered users |
+| `/admin/settings` | Configure store content |
 
 ---
 
@@ -142,7 +155,15 @@ Get these values from your [Supabase Dashboard](https://supabase.com/dashboard) 
 2. Copy and paste the contents of `supabase/schema.sql`
 3. Click "Run" to create all tables and functions
 
-### 2. Seed Demo Data (Optional)
+### 2. Run Store Settings Migration (Optional but Recommended)
+
+For store settings to work, run:
+
+1. Go to SQL Editor
+2. Copy and paste `supabase/migrations/001_add_store_settings.sql`
+3. Click "Run"
+
+### 3. Seed Demo Data (Optional)
 
 The schema.sql already includes seed data. To run separately:
 
@@ -154,7 +175,7 @@ This creates:
 - 4 Categories: Templates, Business, Marketing, Design
 - 8 Digital Products with realistic data
 
-### 3. Create Admin User
+### 4. Create Admin User
 
 1. Go to `/auth/sign-up` and create an account
 2. In Supabase SQL Editor, run:
@@ -165,7 +186,11 @@ SET is_admin = TRUE
 WHERE email = 'your-email@example.com';
 ```
 
-3. Refresh your app — you now see the "Admin" link in the navbar
+3. Refresh your app — you now see the "Admin" link in the sidebar
+
+### 5. Set Up RLS (Recommended for Production)
+
+Run `supabase/rls.sql` in your Supabase SQL Editor to enable Row Level Security policies.
 
 ---
 
@@ -175,15 +200,18 @@ WHERE email = 'your-email@example.com';
 ├── app/                        # Next.js App Router
 │   ├── admin/                  # Admin dashboard pages
 │   │   ├── products/           # Product management (list, create, edit)
-│   │   └── categories/         # Category management
+│   │   ├── categories/         # Category management
+│   │   ├── orders/             # Orders view
+│   │   ├── customers/          # Customers view
+│   │   └── settings/           # Store settings
 │   ├── auth/                   # Authentication pages
 │   │   ├── login/
 │   │   ├── sign-up/
 │   │   └── callback/           # OAuth callback handler
 │   ├── cart/                   # Shopping cart
-│   ├── checkout/                # Demo checkout
+│   ├── checkout/               # Demo checkout
 │   ├── products/[slug]/        # Product detail pages
-│   ├── category/[slug]/        # Category listing pages
+│   ├── category/[slug]/         # Category listing pages
 │   └── order-confirmation/[id]/ # Order confirmation
 ├── components/                 # React components
 │   ├── admin/                  # Admin-specific components
@@ -191,12 +219,15 @@ WHERE email = 'your-email@example.com';
 │   ├── navbar.tsx              # Navigation
 │   ├── footer.tsx              # Footer
 │   ├── cart-provider.tsx       # Cart context
-│   └── product-card.tsx        # Product card
+│   └── product-card.tsx         # Product card
 ├── lib/                        # Library code
-│   ├── db/                     # Database queries
+│   ├── db/                     # Public database queries
+│   ├── admin/                  # Admin database queries
 │   │   ├── products.ts
 │   │   ├── categories.ts
-│   │   └── orders.ts
+│   │   ├── orders.ts
+│   │   ├── customers.ts
+│   │   └── settings.ts
 │   ├── supabase/               # Supabase clients
 │   │   ├── client.ts           # Browser client
 │   │   ├── server.ts           # Server client
@@ -209,7 +240,10 @@ WHERE email = 'your-email@example.com';
 │   └── assets/                 # Screenshots, diagrams
 ├── supabase/                   # SQL files
 │   ├── schema.sql              # Database schema + seed
-│   └── seed.sql                # Seed data only
+│   ├── seed.sql                # Seed data only
+│   ├── rls.sql                # Row Level Security policies
+│   └── migrations/             # Database migrations
+│       └── 001_add_store_settings.sql
 └── public/                     # Static assets
 ```
 
@@ -220,13 +254,16 @@ WHERE email = 'your-email@example.com';
 ### ✅ Implemented Now
 
 - Dynamic products and categories from Supabase
-- Admin dashboard with product/category management
+- Admin dashboard with full management features
 - Shopping cart with persistent state
 - Demo checkout flow (simulated, no real payment)
 - User authentication (signup, login, logout)
-- Role-based admin access
+- Role-based admin access via `is_admin` flag
 - Responsive storefront design
 - Product slug-based routing
+- Product status control (publish/draft/archive)
+- Featured product toggle
+- Store settings management
 
 ### 🔄 Future Production Phase
 
@@ -238,6 +275,7 @@ WHERE email = 'your-email@example.com';
 - Discount/promo code system
 - Order tracking
 - Email notifications
+- Product image upload to Supabase Storage
 
 ---
 
